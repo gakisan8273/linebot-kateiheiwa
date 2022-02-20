@@ -17,6 +17,10 @@ functions:
       LINE_ACCESS_TOKEN: ${env:LINE_ACCESS_TOKEN, ""}
       LINE_CHANNEL_SECRET: ${env:LINE_CHANNEL_SECRET, ""}
       MY_LINE_USER_ID: ${env:MY_LINE_USER_ID, ""}
+    events:
+      - httpApi:
+          path: /
+          method: post
 
 plugins:
   - serverless-python-requirements
