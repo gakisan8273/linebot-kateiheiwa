@@ -23,6 +23,10 @@ frameworkVersion: '3'
 provider:
   name: aws
   runtime: python3.8
+  region: ap-northeast-1
+  stage: dev
+  layers:
+    - { Ref: PythonRequirementsLambdaLayer }
 
 # you can overwrite defaults here
 #  stage: dev
@@ -115,3 +119,16 @@ functions:
 
 plugins:
   - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: non-linux
+    slim: true # __pycache__とかいらないものを消してくれる。
+    zip: true  # scipyとか大きいモジュールをzip化してくれる。
+    useDownloadCache: true # デプロイ時、pipライブラリをキャッシュして使う。
+    useStaticCache: true
+    layer:
+      name: ${self:provider.stage}-requirementLayer
+      description: Python requirements lambda layer
+      compatibleRuntimes:
+        - python3.8

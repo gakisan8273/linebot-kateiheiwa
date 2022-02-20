@@ -1,4 +1,7 @@
 # Distribution / packaging
+__pycache__
+layers
+.requirements.zip
 .Python
 env/
 build/
