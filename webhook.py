@@ -19,7 +19,7 @@ def handler(event, context):
         # event['body']はJSON文字列なのでパースする
         body = json.loads(event['body'])
         reply_token = body['events'][0]['replyToken']
-        line_bot_api.reply_message(reply_token, TextSendMessage('応答メッセージ'))
+        line_bot_api.reply_message(reply_token, TextSendMessage(body['events'][0]['message']['text']))
     except InvalidSignatureError:
         print('not authenticated')
         print(InvalidSignatureError)
