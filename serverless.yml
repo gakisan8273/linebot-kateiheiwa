@@ -9,6 +9,14 @@ provider:
   stage: dev
   layers:
     - { Ref: PythonRequirementsLambdaLayer }
+  iam:
+    role:
+      statements:
+        - Effect: 'Allow'
+          Action:
+            - 'dynamodb:*'
+          Resource:
+            - arn:aws:dynamodb:${env:AWS_REGION}:${env:AWS_ACCOUNT_ID}:table/*
 
 functions:
   good_work:
@@ -43,3 +51,19 @@ custom:
       description: Python requirements lambda layer
       compatibleRuntimes:
         - python3.8
+
+resources:
+  Resources:
+    TiredScores:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: tired-scores
