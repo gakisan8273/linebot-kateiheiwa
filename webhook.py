@@ -30,12 +30,17 @@ def handler(event, context):
 
     for line_event in line_events:
         if isinstance(line_event, PostbackEvent):
-            response = table.get_item(Key={'id': 'test'})
-            print(response)
+            user_id = line_event.source.user_id
+            response = table.get_item(Key={'id': user_id})
+            if 'Item' in response:
+                score = int(response['Item']['score'])
+            else:
+                score = 0
+            add_score = int(line_event.postback.data)
             table.put_item(
                 Item = {
-                    "id": "test",
-                    "score": line_event.postback.data,
+                    "id": user_id,
+                    "score": score + add_score,
                 }
             )
             text_send_message = TextSendMessage(line_event.postback.data)
