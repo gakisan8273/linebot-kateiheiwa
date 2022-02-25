@@ -21,29 +21,31 @@ def handler(event, context):
     body = event['body']
     try:
         webhook_handler.handle(body, signature)
-        events = parser.parse(body, signature)
+        line_events = parser.parse(body, signature)
         print('authenticated')
     except InvalidSignatureError:
         print('not authenticated')
         print(InvalidSignatureError)
         return
 
-    for event in events:
-        if isinstance(event, PostbackEvent):
+    for line_event in line_events:
+        if isinstance(line_event, PostbackEvent):
+            response = table.get_item(Key={'id': 'test'})
+            print(response)
             table.put_item(
                 Item = {
                     "id": "test",
-                    "score": event.postback.data,
+                    "score": line_event.postback.data,
                 }
             )
-            text_send_message = TextSendMessage(event.postback.data)
-        elif isinstance(event, MessageEvent):
-            if not isinstance(event.message, TextMessage):
+            text_send_message = TextSendMessage(line_event.postback.data)
+        elif isinstance(line_event, MessageEvent):
+            if not isinstance(line_event.message, TextMessage):
                 return
-            text_send_message = TextSendMessage(event.message.text)
+            text_send_message = TextSendMessage(line_event.message.text)
         else:
             return
-        reply_token = event.reply_token
+        reply_token = line_event.reply_token
         line_bot_api.reply_message(reply_token, text_send_message)
 
     body = {
