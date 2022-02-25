@@ -39,13 +39,22 @@ def handler(event, context):
         else:
             score_now = 0
         score_add = int(line_event.postback.data)
-        score = score_now + score_add
+        # 送信スコアが-1なら完全回復する
+        if score_add == -1:
+            score = 0
+        # 送信スコアが0なら10まで回復
+        elif score_add == 0:
+            score = 10
+        else:
+            score = score_now + score_add
+
         table.put_item(
             Item = {
                 "id": user_id,
                 "score": score,
             }
         )
+
         # スコアが20未満（仮）なら無理しないでね的な言葉をかける
         if score < 20:
             text_send_message = TextSendMessage('無理しないでね！')
