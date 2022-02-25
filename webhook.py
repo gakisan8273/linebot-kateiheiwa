@@ -1,5 +1,10 @@
 import json
 import os
+import boto3
+
+dynamoDb = boto3.resource('dynamodb')
+table = dynamodb.Table('tired-scores')
+
 from logging import getLogger
 logger = getLogger(__name__)
 
@@ -25,6 +30,12 @@ def handler(event, context):
 
     for event in events:
         if isinstance(event, PostbackEvent):
+            table.put_item(
+                Item = {
+                    "id": "test",
+                    "score": event.postback.data,
+                }
+            )
             text_send_message = TextSendMessage(event.postback.data)
         elif isinstance(event, MessageEvent):
             if not isinstance(event.message, TextMessage):
