@@ -13,27 +13,27 @@ webhook_handler = WebhookHandler(os.environ['LINE_CHANNEL_SECRET'])
 def handler(event, context):
     status_map = {
         'genki': {
-            'data': 1,
+            'score': 0,
             'label': '元気！',
         },
         'a_little_sindoi': {
-            'data': 2,
-            'label': 'ちょっとしんどい',
+            'score': 10,
+            'label': 'なんとか',
         },
         'sindoi': {
-            'data': 3,
+            'score': 20,
             'label': 'しんどい',
         },
         'muri': {
-            'data': 4,
+            'score': 40,
             'label': 'もう無理',
         },
     }
     postback_actions = [
-        PostbackAction(data=status_map['genki']['data'], label=status_map['genki']['label'], text='> ' + status_map['genki']['label']),
-        PostbackAction(data=status_map['a_little_sindoi']['data'], label=status_map['a_little_sindoi']['label'], text='> ' + status_map['a_little_sindoi']['label']),
-        PostbackAction(data=status_map['sindoi']['data'], label=status_map['sindoi']['label'], text='> ' + status_map['sindoi']['label']),
-        PostbackAction(data=status_map['muri']['data'], label=status_map['muri']['label'], text='> ' + status_map['muri']['label']),
+        PostbackAction(data=status_map['genki']['score'], label=status_map['genki']['label'], text='> ' + status_map['genki']['label']),
+        PostbackAction(data=status_map['a_little_sindoi']['score'], label=status_map['a_little_sindoi']['label'], text='> ' + status_map['a_little_sindoi']['label']),
+        PostbackAction(data=status_map['sindoi']['score'], label=status_map['sindoi']['label'], text='> ' + status_map['sindoi']['label']),
+        PostbackAction(data=status_map['muri']['score'], label=status_map['muri']['label'], text='> ' + status_map['muri']['label']),
     ]
     title = '今日もお仕事お疲れ様！'
     text = '体調はどうかな？'

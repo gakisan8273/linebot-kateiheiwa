@@ -29,27 +29,32 @@ def handler(event, context):
         return
 
     for line_event in line_events:
-        if isinstance(line_event, PostbackEvent):
-            user_id = line_event.source.user_id
-            response = table.get_item(Key={'id': user_id})
-            if 'Item' in response:
-                score = int(response['Item']['score'])
-            else:
-                score = 0
-            add_score = int(line_event.postback.data)
-            table.put_item(
-                Item = {
-                    "id": user_id,
-                    "score": score + add_score,
-                }
-            )
-            text_send_message = TextSendMessage(line_event.postback.data)
-        elif isinstance(line_event, MessageEvent):
-            if not isinstance(line_event.message, TextMessage):
-                return
-            text_send_message = TextSendMessage(line_event.message.text)
+        print(line_event)
+        if not isinstance(line_event, PostbackEvent):
+            continue
+        user_id = line_event.source.user_id
+        response = table.get_item(Key={'id': user_id})
+        if 'Item' in response:
+            score_now = int(response['Item']['score'])
         else:
-            return
+            score_now = 0
+        score_add = int(line_event.postback.data)
+        score = score_now + score_add
+        table.put_item(
+            Item = {
+                "id": user_id,
+                "score": score,
+            }
+        )
+        # スコアが20未満（仮）なら無理しないでね的な言葉をかける
+        if score < 20:
+            text_send_message = TextSendMessage('無理しないでね！')
+        # スコアが20以上~40未満（仮）なら休みを促す
+        elif score < 40:
+            text_send_message = TextSendMessage('疲れてるみたいだね！そろそろ休もうか？')
+        # スコアが40以上（仮）なら休みを強く促す
+        else:
+            text_send_message = TextSendMessage('そうだね！今日は一人でご飯食べてきた方がいいね！')
         reply_token = line_event.reply_token
         line_bot_api.reply_message(reply_token, text_send_message)
 
