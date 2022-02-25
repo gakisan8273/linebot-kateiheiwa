@@ -13,7 +13,7 @@ webhook_handler = WebhookHandler(os.environ['LINE_CHANNEL_SECRET'])
 def handler(event, context):
     status_map = {
         'genki': {
-            'score': 0,
+            'score': 5,
             'label': '元気！',
         },
         'a_little_sindoi': {
