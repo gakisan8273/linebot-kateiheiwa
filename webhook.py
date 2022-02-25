@@ -2,8 +2,8 @@ import json
 import os
 import boto3
 
-dynamoDb = boto3.resource('dynamodb')
-table = dynamodb.Table('tired-scores')
+dynamo_db = boto3.resource('dynamodb')
+table = dynamo_db.Table('tired-scores')
 
 from logging import getLogger
 logger = getLogger(__name__)
