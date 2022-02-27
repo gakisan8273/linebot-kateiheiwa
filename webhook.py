@@ -16,6 +16,9 @@ line_bot_api = LineBotApi(os.environ['LINE_ACCESS_TOKEN'])
 webhook_handler = WebhookHandler(os.environ['LINE_CHANNEL_SECRET'])
 parser = WebhookParser(os.environ['LINE_CHANNEL_SECRET'])
 
+# LINE API最大試行数
+MAX_ATTEMPTS = 3
+
 def handler(event, context):
     # LINEメッセージ認証処理
     signature: str = event['headers']['x-line-signature']
@@ -58,6 +61,7 @@ def handler(event, context):
         except Exception as e:
             print('error', e)
             # 応答失敗したら諦める
+            # TODO: レスポンスを変更する
             return
 
     body = {
@@ -114,5 +118,11 @@ def genarate_send_message(score: int) -> TextSendMessage:
 
 # LINEメッセージを応答する
 def reply_message(reply_token: str, text_send_message: TextSendMessage):
-    # TODO: リトライ処理
-    return line_bot_api.reply_message(reply_token, text_send_message)
+    attempt_count = 1
+    while attempt_count <= MAX_ATTEMPTS:
+        try:
+            line_bot_api.reply_message(reply_token, text_send_message)
+        except LineBotApiError as e:
+            attempt_count = attempt_count + 1
+
+    raise LineBotApiError

@@ -1,13 +1,16 @@
 from curses.ascii import alt
 import json
 import os
+import uuid
 
 from linebot import (LineBotApi, WebhookHandler)
 from linebot.models import (TemplateSendMessage, ButtonsTemplate, PostbackAction)
-from linebot.exceptions import (LineBotApiError, InvalidSignatureError)
+from linebot.exceptions import (LineBotApiError)
 
 line_bot_api = LineBotApi(os.environ['LINE_ACCESS_TOKEN'])
 webhook_handler = WebhookHandler(os.environ['LINE_CHANNEL_SECRET'])
+
+# ステータス定義
 STATUS_DICT = {
     'genki': {
         'score': 5,
@@ -27,6 +30,9 @@ STATUS_DICT = {
     },
 }
 
+# LINE API最大試行数
+MAX_ATTEMPTS = 3
+
 def handler(event, context):
     postback_actions = []
     for status, item in STATUS_DICT.items():
@@ -39,6 +45,7 @@ def handler(event, context):
         push_postback_message(os.environ['MY_LINE_USER_ID'], title, buttuns_template)
     except Exception as e:
         print('error', e)
+        # TODO: レスポンスを変更する
         return
 
     body = {
@@ -54,6 +61,16 @@ def handler(event, context):
     return response
 
 # LINEメッセージを送信する
-def push_postback_message(id: str, alt_text: str, buttuns_template: list[ButtonsTemplate]):
-    # TODO: リトライ処理
-    return line_bot_api.push_message(os.environ['MY_LINE_USER_ID'], TemplateSendMessage(alt_text=alt_text, template=buttuns_template))
+def push_postback_message(id: str, alt_text: str, buttuns_template: list[ButtonsTemplate]) -> bool:
+    # 16進表記のUUID
+    retry_key = str(uuid.uuid1())
+    attempt_count = 1
+    messages = TemplateSendMessage(alt_text=alt_text, template=buttuns_template)
+    while attempt_count <= MAX_ATTEMPTS:
+        try:
+            line_bot_api.push_message(to=os.environ['MY_LINE_USER_ID'], messages=messages, retry_key=retry_key)
+            return True
+        except LineBotApiError as e:
+            attempt_count = attempt_count + 1
+
+    raise LineBotApiError
