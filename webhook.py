@@ -9,7 +9,7 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 from linebot import (LineBotApi, WebhookHandler, WebhookParser)
-from linebot.models import (TextSendMessage, PostbackEvent, MessageEvent, TextMessage)
+from linebot.models import (TextSendMessage, PostbackEvent)
 from linebot.exceptions import (LineBotApiError, InvalidSignatureError)
 
 line_bot_api = LineBotApi(os.environ['LINE_ACCESS_TOKEN'])
@@ -17,58 +17,32 @@ webhook_handler = WebhookHandler(os.environ['LINE_CHANNEL_SECRET'])
 parser = WebhookParser(os.environ['LINE_CHANNEL_SECRET'])
 
 def handler(event, context):
-    signature = event['headers']['x-line-signature']
-    body = event['body']
-    try:
-        webhook_handler.handle(body, signature)
-        line_events = parser.parse(body, signature)
-        print('authenticated')
-    except InvalidSignatureError:
-        print('not authenticated')
-        print(InvalidSignatureError)
+    signature: str = event['headers']['x-line-signature']
+    body: dict = event['body']
+    if not authenticate(body, signature):
         return
 
+    line_events: list = parser.parse(body, signature)
     for line_event in line_events:
-        print(line_event)
+        # ポストバックイベントのみ処理する
         if not isinstance(line_event, PostbackEvent):
             continue
-        user_id = line_event.source.user_id
-        response = table.get_item(Key={'id': user_id})
-        if 'Item' in response:
-            score_now = int(response['Item']['score'])
-        else:
-            score_now = 0
-        score_add = int(line_event.postback.data)
-        # 送信スコアが-1なら完全回復する
-        if score_add == -1:
-            score = 0
-        # 送信スコアが0なら10まで回復
-        elif score_add == 0:
-            score = 10
-        else:
-            score = score_now + score_add
 
-        table.put_item(
-            Item = {
-                "id": user_id,
-                "score": score,
-            }
-        )
+        id: str = line_event.source.user_id
+        # 現在のスコア・イベントから送信されたスコアより更新する値を決定する
+        score_now: int = get_score(id)
+        score_add: int = int(line_event.postback.data)
+        score: int = calculate_score(score_now, score_add)
 
-        # スコアが20未満（仮）なら無理しないでね的な言葉をかける
-        if score < 20:
-            text_send_message = TextSendMessage('無理しないでね！')
-        # スコアが20以上~40未満（仮）なら休みを促す
-        elif score < 40:
-            text_send_message = TextSendMessage('疲れてるみたいだね！そろそろ休もうか？')
-        # スコアが40以上（仮）なら休みを強く促す
-        else:
-            text_send_message = TextSendMessage('そうだね！今日は一人でご飯食べてきた方がいいね！')
-        reply_token = line_event.reply_token
-        line_bot_api.reply_message(reply_token, text_send_message)
+        # DynamoDBのスコアを更新
+        result = put_item(id, score)
+
+        # スコアから応答メッセージを生成して送信
+        text_send_message: TextSendMessage = genarate_send_message(score)
+        result = reply_message(line_event.reply_token, text_send_message)
 
     body = {
-        "message": "Go Serverless v1.0! Your function executed successfully!",
+        "message": "応答メッセージを送信しました。",
         "input": event
     }
 
@@ -78,3 +52,59 @@ def handler(event, context):
     }
 
     return response
+
+# LINEメッセージ認証処理
+def authenticate(body: dict, signature: str) -> bool:
+    try:
+        webhook_handler.handle(body, signature)
+        return True
+    except InvalidSignatureError:
+        print('not authenticated')
+        print(InvalidSignatureError)
+        return False
+
+# DynamoDBからスコアを取得
+def get_score(id: str) -> int:
+    # TODO: 例外処理
+    response = table.get_item(Key={'id': id})
+    if not 'Item' in response:
+        return 0
+    return int(response['Item']['score'])
+
+# DynamoDBのスコアを更新
+def put_item(id: str, score: int):
+    # TODO: 例外処理
+    table.put_item(
+        Item = {
+            "id": id,
+            "score": score,
+        }
+    )
+
+# 更新するスコアを計算する
+def calculate_score(now: int, add: int) -> int:
+    # 送信スコアが-1なら完全回復する
+    if add == -1:
+        return 0
+    # 送信スコアが0なら10まで回復
+    elif add == 0:
+        return 10
+    else:
+        return now + add
+
+# スコアに応じた応答メッセージを生成する
+def genarate_send_message(score: int) -> TextSendMessage:
+    # スコアが20未満（仮）なら無理しないでね的な言葉をかける
+    if score < 20:
+        return TextSendMessage('無理しないでね！')
+    # スコアが20以上~40未満（仮）なら休みを促す
+    elif score < 40:
+        return TextSendMessage('疲れてるみたいだね！そろそろ休もうか？')
+    # スコアが40以上（仮）なら休みを強く促す
+    else:
+        return TextSendMessage('そうだね！今日は一人でご飯食べてきた方がいいね！')
+
+# LINEメッセージを応答する
+def reply_message(reply_token: str, text_send_message: TextSendMessage):
+    # TODO: 例外処理
+    return line_bot_api.reply_message(reply_token, text_send_message)
