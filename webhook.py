@@ -55,7 +55,7 @@ def handler(event, context):
             return
 
         # スコアから応答メッセージを生成して送信
-        text_send_message: TextSendMessage = genarate_send_message(score)
+        text_send_message: str = genarate_send_message(score)
         try:
             return line_bot_api.reply_message(line_event.reply_token, text_send_message)
         except Exception as e:
@@ -105,23 +105,24 @@ def calculate_score(now: int, add: int) -> int:
         return now + add
 
 # スコアに応じた応答メッセージを生成する
-def genarate_send_message(score: int) -> TextSendMessage:
+def genarate_send_message(score: int) -> str:
     # スコアが20未満（仮）なら無理しないでね的な言葉をかける
     if score < 20:
-        return TextSendMessage('無理しないでね！')
+        return '無理しないでね！'
     # スコアが20以上~40未満（仮）なら休みを促す
     elif score < 40:
-        return TextSendMessage('疲れてるみたいだね！そろそろ休もうか？')
+        return '疲れてるみたいだね！そろそろ休もうか？'
     # スコアが40以上（仮）なら休みを強く促す
     else:
-        return TextSendMessage('そうだね！今日は一人でご飯食べてきた方がいいね！')
+        return 'そうだね！今日は一人でご飯食べてきた方がいいね！'
 
 # LINEメッセージを応答する
-def reply_message(reply_token: str, text_send_message: TextSendMessage):
+def reply_message(reply_token: str, text: str):
     attempt_count = 1
+    messages = TextSendMessage(text)
     while attempt_count <= MAX_ATTEMPTS:
         try:
-            line_bot_api.reply_message(reply_token, text_send_message)
+            line_bot_api.reply_message(reply_token, messages)
         except LineBotApiError as e:
             attempt_count = attempt_count + 1
 
