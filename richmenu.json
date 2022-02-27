@@ -16,7 +16,7 @@
             },
             "action": {
                 "type": "postback",
-                "data": 40,
+                "data": 601,
                 "displayText": "> もう無理"
             }
         },
@@ -29,7 +29,7 @@
             },
             "action": {
                 "type": "postback",
-                "data": 20,
+                "data": 300,
                 "displayText": "> しんどい"
             }
         },

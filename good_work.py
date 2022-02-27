@@ -11,21 +11,32 @@ line_bot_api = LineBotApi(os.environ['LINE_ACCESS_TOKEN'])
 webhook_handler = WebhookHandler(os.environ['LINE_CHANNEL_SECRET'])
 
 # ステータス定義
+# 上限600とする
+# 元気 → 5日で上限になるように 600/5=120
+# なんとか → 3日で上限になるように 600/3=200
+# しんどい → 2日で上限になるように 600/2=300
+# もう無理 → 一発で上限を超えるように 600<601
+# 〜120 元気
+# 121〜240 なんとか頑張ってる
+# 241〜360 そろそろきつい
+# 361〜480 やばい
+# 481〜600 休め
+# 601〜    強く休め
 STATUS_DICT = {
     'genki': {
-        'score': 5,
+        'score': 120,
         'label': '元気！',
     },
     'a_little_sindoi': {
-        'score': 10,
+        'score': 200,
         'label': 'なんとか',
     },
     'sindoi': {
-        'score': 20,
+        'score': 300,
         'label': 'しんどい',
     },
     'muri': {
-        'score': 40,
+        'score': 601,
         'label': 'もう無理',
     },
 }
