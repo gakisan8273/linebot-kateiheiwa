@@ -1,3 +1,4 @@
+from curses.ascii import alt
 import json
 import os
 
@@ -7,35 +8,38 @@ from linebot.exceptions import (LineBotApiError, InvalidSignatureError)
 
 line_bot_api = LineBotApi(os.environ['LINE_ACCESS_TOKEN'])
 webhook_handler = WebhookHandler(os.environ['LINE_CHANNEL_SECRET'])
+STATUS_DICT = {
+    'genki': {
+        'score': 5,
+        'label': '元気！',
+    },
+    'a_little_sindoi': {
+        'score': 10,
+        'label': 'なんとか',
+    },
+    'sindoi': {
+        'score': 20,
+        'label': 'しんどい',
+    },
+    'muri': {
+        'score': 40,
+        'label': 'もう無理',
+    },
+}
 
 def handler(event, context):
-    status_dict = {
-        'genki': {
-            'score': 5,
-            'label': '元気！',
-        },
-        'a_little_sindoi': {
-            'score': 10,
-            'label': 'なんとか',
-        },
-        'sindoi': {
-            'score': 20,
-            'label': 'しんどい',
-        },
-        'muri': {
-            'score': 40,
-            'label': 'もう無理',
-        },
-    }
     postback_actions = []
-    for status, item in status_dict.items():
+    for status, item in STATUS_DICT.items():
         postback_actions.append(PostbackAction(data=item['score'], label=item['label'], text='> ' + item['label']))
 
     title = '今日もお仕事お疲れ様！'
     text = '体調はどうかな？'
     buttuns_template = ButtonsTemplate(text=text, title=title, actions=postback_actions)
-    # TODO: 例外処理
-    line_bot_api.push_message(os.environ['MY_LINE_USER_ID'], TemplateSendMessage(alt_text=title, template=buttuns_template))
+    try:
+        push_postback_message(os.environ['MY_LINE_USER_ID'], title, buttuns_template)
+    except Exception as e:
+        print('error', e)
+        return
 
     body = {
         "message": "お疲れ様メッセージを送信しました。",
@@ -48,3 +52,8 @@ def handler(event, context):
     }
 
     return response
+
+# LINEメッセージを送信する
+def push_postback_message(id: str, alt_text: str, buttuns_template: list[ButtonsTemplate]):
+    # TODO: リトライ処理
+    return line_bot_api.push_message(os.environ['MY_LINE_USER_ID'], TemplateSendMessage(alt_text=alt_text, template=buttuns_template))

@@ -3,7 +3,7 @@ import os
 import boto3
 
 dynamo_db = boto3.resource('dynamodb')
-table = dynamo_db.Table('tired-scores')
+table = dynamo_db.Table('tired-scores__')
 
 from logging import getLogger
 logger = getLogger(__name__)
@@ -17,9 +17,13 @@ webhook_handler = WebhookHandler(os.environ['LINE_CHANNEL_SECRET'])
 parser = WebhookParser(os.environ['LINE_CHANNEL_SECRET'])
 
 def handler(event, context):
+    # LINEメッセージ認証処理
     signature: str = event['headers']['x-line-signature']
     body: dict = event['body']
-    if not authenticate(body, signature):
+    try:
+        webhook_handler.handle(body, signature)
+    except InvalidSignatureError as e:
+        print('not authenticated')
         return
 
     line_events: list = parser.parse(body, signature)
@@ -30,16 +34,31 @@ def handler(event, context):
 
         id: str = line_event.source.user_id
         # 現在のスコア・イベントから送信されたスコアより更新する値を決定する
-        score_now: int = get_score(id)
+        try:
+            score_now: int = get_score(id)
+        except Exception as e:
+            print('error', e)
+            # TODO: 例外発生時は再度発言を促す応答メッセージを返す
+            return
         score_add: int = int(line_event.postback.data)
         score: int = calculate_score(score_now, score_add)
 
         # DynamoDBのスコアを更新
-        result = put_item(id, score)
+        try:
+            put_item(id, score)
+        except Exception as e:
+            print('error', e)
+            # TODO: 例外発生時は再度発言を促す応答メッセージを返す
+            return
 
         # スコアから応答メッセージを生成して送信
         text_send_message: TextSendMessage = genarate_send_message(score)
-        result = reply_message(line_event.reply_token, text_send_message)
+        try:
+            return line_bot_api.reply_message(line_event.reply_token, text_send_message)
+        except Exception as e:
+            print('error', e)
+            # 応答失敗したら諦める
+            return
 
     body = {
         "message": "応答メッセージを送信しました。",
@@ -53,27 +72,16 @@ def handler(event, context):
 
     return response
 
-# LINEメッセージ認証処理
-def authenticate(body: dict, signature: str) -> bool:
-    try:
-        webhook_handler.handle(body, signature)
-        return True
-    except InvalidSignatureError:
-        print('not authenticated')
-        print(InvalidSignatureError)
-        return False
-
 # DynamoDBからスコアを取得
 def get_score(id: str) -> int:
-    # TODO: 例外処理
     response = table.get_item(Key={'id': id})
     if not 'Item' in response:
         return 0
+
     return int(response['Item']['score'])
 
 # DynamoDBのスコアを更新
-def put_item(id: str, score: int):
-    # TODO: 例外処理
+def put_item(id: str, score: int) -> None:
     table.put_item(
         Item = {
             "id": id,
@@ -106,5 +114,5 @@ def genarate_send_message(score: int) -> TextSendMessage:
 
 # LINEメッセージを応答する
 def reply_message(reply_token: str, text_send_message: TextSendMessage):
-    # TODO: 例外処理
+    # TODO: リトライ処理
     return line_bot_api.reply_message(reply_token, text_send_message)
