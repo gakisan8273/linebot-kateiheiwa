@@ -1,9 +1,10 @@
 import json
 import os
 import boto3
+import random
 
 dynamo_db = boto3.resource('dynamodb')
-table = dynamo_db.Table('tired-scores__')
+table = dynamo_db.Table('tired-scores')
 
 from logging import getLogger
 logger = getLogger(__name__)
@@ -55,9 +56,9 @@ def handler(event, context):
             return
 
         # スコアから応答メッセージを生成して送信
-        text_send_message: str = genarate_send_message(score)
+        send_message: str = genarate_send_message(score)
         try:
-            return line_bot_api.reply_message(line_event.reply_token, text_send_message)
+            return line_bot_api.reply_message(line_event.reply_token, TextSendMessage(send_message))
         except Exception as e:
             print('error', e)
             # 応答失敗したら諦める
@@ -107,25 +108,59 @@ def calculate_score(now: int, add: int) -> int:
 # スコアに応じた応答メッセージを生成する
 def genarate_send_message(score: int) -> str:
     # TODO: 各メッセージを数種類ランダムにする
+    json_open = open('reply.json', 'r')
+    reply_messages = json.load(json_open)
 
     # 〜120→元気
     if score <= 120:
-        return '無理しないでね！'
+        condition = 'genki'
+        messages = reply_messages[condition]
+        length = len(messages)
+        print(length)
+        print(random.randrange(length - 1))
+        print(reply_messages[condition])
+        print(reply_messages[condition][random.randrange(length - 1)])
+        return reply_messages[condition][random.randrange(length - 1)]
     # 121〜240 なんとか頑張ってる
     elif score <= 240:
-        return '疲れてるみたいだね！そろそろ休もうか？'
+        condition = 'nantoka'
+        messages = reply_messages[condition]
+        length = len(messages)
+        return reply_messages[condition][random.randrange(length - 1)]
     # 241〜360 そろそろきつい
     elif score <= 360:
-        return '疲れてるみたいだね！そろそろ休もうか？'
+        condition = 'sindoi'
+        messages = reply_messages[condition]
+        length = len(messages)
+        return reply_messages[condition][random.randrange(length - 1)]
     # 361〜480 ストレス溜まっている
     elif score <= 480:
-        return '疲れてるみたいだね！そろそろ休もうか？'
+        condition = 'kitsui'
+        messages = reply_messages[condition]
+        length = len(messages)
+        return reply_messages[condition][random.randrange(length - 1)]
     # 481〜600 休んだほうがいい
     elif score <= 600:
-        return '疲れてるみたいだね！そろそろ休もうか？'
+        condition = 'yasume'
+        messages = reply_messages[condition]
+        length = len(messages)
+        return reply_messages[condition][random.randrange(length - 1)]
     # 601〜    休め
     else:
-        return 'そうだね！今日は一人でご飯食べてきた方がいいね！'
+        condition = 'limit'
+        messages = reply_messages[condition]
+        length = len(messages)
+        print('600以上')
+        print(reply_messages[condition][random.randrange(length - 1)])
+        return reply_messages[condition][random.randrange(length - 1)]
+
+# def get_message(condition: str) -> str:
+#     json_open = open('reply.json', 'r')
+#     reply_messages = json.load(json_open)
+#     condition = 'genki'
+#     messages = reply_messages[condition]
+#     length = len(messages)
+#     return reply_messages['120'][random.randrange(length - 1)]
 
 # LINEメッセージを応答する
 def reply_message(reply_token: str, text: str):
