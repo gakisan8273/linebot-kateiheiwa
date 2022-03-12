@@ -42,7 +42,7 @@ def handler(event, context):
             score_now: int = get_score(id)
         except Exception as e:
             print('error', e)
-            # TODO: 例外発生時は再度発言を促す応答メッセージを返す
+            line_bot_api.reply_message(line_event.reply_token, TextSendMessage('ごめんなさい、エラーが発生したのでもう一回発言してね'))
             return
         score_add: int = int(line_event.postback.data)
         score: int = calculate_score(score_now, score_add)
@@ -52,13 +52,13 @@ def handler(event, context):
             put_item(id, score)
         except Exception as e:
             print('error', e)
-            # TODO: 例外発生時は再度発言を促す応答メッセージを返す
+            line_bot_api.reply_message(line_event.reply_token, TextSendMessage('ごめんなさい、エラーが発生したのでもう一回発言してね'))
             return
 
         # スコアから応答メッセージを生成して送信
         send_message: str = genarate_send_message(score)
         try:
-            return line_bot_api.reply_message(line_event.reply_token, TextSendMessage(send_message))
+            line_bot_api.reply_message(line_event.reply_token, TextSendMessage(send_message))
         except Exception as e:
             print('error', e)
             # 応答失敗したら諦める
