@@ -21,6 +21,9 @@ provider:
 functions:
   good_work:
     handler: good_work.handler
+    events:
+      # UTCで8時→JPで17時 平日の仕事終わりに定期的にメッセージを送る
+      - schedule: cron(0 8 ? * MON-FRI *)
     environment:
       LINE_ACCESS_TOKEN: ${env:LINE_ACCESS_TOKEN, ""}
       LINE_CHANNEL_SECRET: ${env:LINE_CHANNEL_SECRET, ""}
