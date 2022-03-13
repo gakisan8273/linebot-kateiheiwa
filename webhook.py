@@ -107,60 +107,35 @@ def calculate_score(now: int, add: int) -> int:
 
 # スコアに応じた応答メッセージを生成する
 def genarate_send_message(score: int) -> str:
-    # TODO: 各メッセージを数種類ランダムにする
     json_open = open('reply.json', 'r')
     reply_messages = json.load(json_open)
 
     # 〜120→元気
     if score <= 120:
         condition = 'genki'
-        messages = reply_messages[condition]
-        length = len(messages)
-        print(length)
-        print(random.randrange(length - 1))
-        print(reply_messages[condition])
-        print(reply_messages[condition][random.randrange(length - 1)])
-        return reply_messages[condition][random.randrange(length - 1)]
     # 121〜240 なんとか頑張ってる
     elif score <= 240:
         condition = 'nantoka'
-        messages = reply_messages[condition]
-        length = len(messages)
-        return reply_messages[condition][random.randrange(length - 1)]
     # 241〜360 そろそろきつい
     elif score <= 360:
         condition = 'sindoi'
-        messages = reply_messages[condition]
-        length = len(messages)
-        return reply_messages[condition][random.randrange(length - 1)]
     # 361〜480 ストレス溜まっている
     elif score <= 480:
         condition = 'kitsui'
-        messages = reply_messages[condition]
-        length = len(messages)
-        return reply_messages[condition][random.randrange(length - 1)]
     # 481〜600 休んだほうがいい
     elif score <= 600:
         condition = 'yasume'
-        messages = reply_messages[condition]
-        length = len(messages)
-        return reply_messages[condition][random.randrange(length - 1)]
     # 601〜    休め
     else:
         condition = 'limit'
-        messages = reply_messages[condition]
-        length = len(messages)
-        print('600以上')
-        print(reply_messages[condition][random.randrange(length - 1)])
-        return reply_messages[condition][random.randrange(length - 1)]
 
-# def get_message(condition: str) -> str:
-#     json_open = open('reply.json', 'r')
-#     reply_messages = json.load(json_open)
-#     condition = 'genki'
-#     messages = reply_messages[condition]
-#     length = len(messages)
-#     return reply_messages['120'][random.randrange(length - 1)]
+    messages = reply_messages[condition]
+    length = len(messages)
+    if length > 1:
+        element = random.randrange(length - 1)
+    else:
+        element = 0
+    return reply_messages[condition][element]
 
 # LINEメッセージを応答する
 def reply_message(reply_token: str, text: str):
