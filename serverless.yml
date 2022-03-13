@@ -27,18 +27,19 @@ functions:
     environment:
       LINE_ACCESS_TOKEN: ${env:LINE_ACCESS_TOKEN, ""}
       LINE_CHANNEL_SECRET: ${env:LINE_CHANNEL_SECRET, ""}
-      MY_LINE_USER_ID: ${env:MY_LINE_USER_ID, ""}
   # UTCで15時→JPで24時 日曜24時にスコアを0にリセットする
   reset:
     handler: reset.handler
     events:
       - schedule: cron(0 15 ? * SUN *)
+    environment:
+      LINE_ACCESS_TOKEN: ${env:LINE_ACCESS_TOKEN, ""}
+      LINE_CHANNEL_SECRET: ${env:LINE_CHANNEL_SECRET, ""}
   webhook:
     handler: webhook.handler
     environment:
       LINE_ACCESS_TOKEN: ${env:LINE_ACCESS_TOKEN, ""}
       LINE_CHANNEL_SECRET: ${env:LINE_CHANNEL_SECRET, ""}
-      MY_LINE_USER_ID: ${env:MY_LINE_USER_ID, ""}
     events:
       - httpApi:
           path: /
@@ -75,3 +76,16 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         TableName: tired-scores
+    GroupTalk:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: group-talk

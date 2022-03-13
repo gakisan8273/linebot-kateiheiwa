@@ -2,6 +2,10 @@ from curses.ascii import alt
 import json
 import os
 import uuid
+import boto3
+
+dynamo_db = boto3.resource('dynamodb')
+group_talk = dynamo_db.Table('group-talk')
 
 from linebot import (LineBotApi, WebhookHandler)
 from linebot.models import (TemplateSendMessage, ButtonsTemplate, PostbackAction)
@@ -53,7 +57,8 @@ def handler(event, context):
     text = '体調はどうかな？'
     buttuns_template = ButtonsTemplate(text=text, title=title, actions=postback_actions)
     try:
-        push_postback_message(os.environ['MY_LINE_USER_ID'], title, buttuns_template)
+        group_talk_id = get_group_talk_id()
+        push_postback_message(group_talk_id, title, buttuns_template)
     except Exception as e:
         print('error', e)
         # TODO: レスポンスを変更する
@@ -85,3 +90,10 @@ def push_postback_message(id: str, alt_text: str, buttuns_template: list[Buttons
             attempt_count = attempt_count + 1
 
     raise LineBotApiError
+
+# トークグループIDを取得
+def get_group_talk_id() -> str:
+    records = group_talk.scan()
+    if not records['Items']:
+        raise Exception
+    return records['Items'][0]['id']

@@ -4,13 +4,14 @@ import boto3
 import random
 
 dynamo_db = boto3.resource('dynamodb')
-table = dynamo_db.Table('tired-scores')
+scores = dynamo_db.Table('tired-scores')
+group_talk = dynamo_db.Table('group-talk')
 
 from logging import getLogger
 logger = getLogger(__name__)
 
 from linebot import (LineBotApi, WebhookHandler, WebhookParser)
-from linebot.models import (TextSendMessage, PostbackEvent)
+from linebot.models import (TextSendMessage, PostbackEvent, MessageEvent)
 from linebot.exceptions import (LineBotApiError, InvalidSignatureError)
 
 line_bot_api = LineBotApi(os.environ['LINE_ACCESS_TOKEN'])
@@ -32,14 +33,23 @@ def handler(event, context):
 
     line_events: list = parser.parse(body, signature)
     for line_event in line_events:
-        # ポストバックイベントのみ処理する
+        # グループトークからの発言があれば登録する
+        # それ以外はポストバックイベントのみ処理する
+        if isinstance(line_event, MessageEvent):
+            group_id: str = getattr(line_event.source, 'group_id', '')
+            try:
+                register_group_talk(group_id)
+            except Exception as e:
+                print('error', e)
+                line_bot_api.reply_message(line_event.reply_token, TextSendMessage('ごめんなさい、エラーが発生したのでもう一回発言してね'))
+                return
         if not isinstance(line_event, PostbackEvent):
             continue
 
-        id: str = line_event.source.user_id
+        user_id: str = line_event.source.user_id
         # 現在のスコア・イベントから送信されたスコアより更新する値を決定する
         try:
-            score_now: int = get_score(id)
+            score_now: int = get_score(user_id)
         except Exception as e:
             print('error', e)
             line_bot_api.reply_message(line_event.reply_token, TextSendMessage('ごめんなさい、エラーが発生したのでもう一回発言してね'))
@@ -49,7 +59,7 @@ def handler(event, context):
 
         # DynamoDBのスコアを更新
         try:
-            put_item(id, score)
+            update_score(user_id, score)
         except Exception as e:
             print('error', e)
             line_bot_api.reply_message(line_event.reply_token, TextSendMessage('ごめんなさい、エラーが発生したのでもう一回発言してね'))
@@ -79,15 +89,25 @@ def handler(event, context):
 
 # DynamoDBからスコアを取得
 def get_score(id: str) -> int:
-    response = table.get_item(Key={'id': id})
+    response = scores.get_item(Key={'id': id})
     if not 'Item' in response:
         return 0
 
     return int(response['Item']['score'])
 
+# グループトークを登録する
+def register_group_talk(id: str) -> None:
+    if not id:
+        return
+    group_talk.put_item(
+        Item = {
+            "id": id,
+        }
+    )
+
 # DynamoDBのスコアを更新
-def put_item(id: str, score: int) -> None:
-    table.put_item(
+def update_score(id: str, score: int) -> None:
+    scores.put_item(
         Item = {
             "id": id,
             "score": score,
