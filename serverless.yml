@@ -19,15 +19,20 @@ provider:
             - arn:aws:dynamodb:${env:AWS_REGION}:${env:AWS_ACCOUNT_ID}:table/*
 
 functions:
+  # UTCで8時→JPで17時 平日の仕事終わりに定期的にメッセージを送る
   good_work:
     handler: good_work.handler
     events:
-      # UTCで8時→JPで17時 平日の仕事終わりに定期的にメッセージを送る
       - schedule: cron(0 8 ? * MON-FRI *)
     environment:
       LINE_ACCESS_TOKEN: ${env:LINE_ACCESS_TOKEN, ""}
       LINE_CHANNEL_SECRET: ${env:LINE_CHANNEL_SECRET, ""}
       MY_LINE_USER_ID: ${env:MY_LINE_USER_ID, ""}
+  # UTCで15時→JPで24時 日曜24時にスコアを0にリセットする
+  reset:
+    handler: reset.handler
+    events:
+      - schedule: cron(0 15 ? * SUN *)
   webhook:
     handler: webhook.handler
     environment:
