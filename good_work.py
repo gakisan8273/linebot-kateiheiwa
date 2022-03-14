@@ -25,7 +25,7 @@ webhook_handler = WebhookHandler(os.environ['LINE_CHANNEL_SECRET'])
 # 361〜480 やばい
 # 481〜600 休め
 # 601〜    強く休め
-STATUS_DICT = {
+STATUS_DICT_DAILY = {
     'genki': {
         'score': 120,
         'label': '元気！',
@@ -43,17 +43,39 @@ STATUS_DICT = {
         'label': 'もう無理',
     },
 }
+STATUS_DICT_ON_DEMAND = {
+    'sindoi': {
+        'score': 300,
+        'label': 'しんどい',
+    },
+    'muri': {
+        'score': 601,
+        'label': 'もう無理',
+    },
+    'sukosi_kaihuku': {
+        'score': 0,
+        'label': '少し回復',
+    },
+    'kannzen_kaihuku': {
+        'score': -1,
+        'label': '完全回復',
+    },
+}
 
 # LINE API最大試行数
 MAX_ATTEMPTS = 3
 
 def handler(event, context):
-    # TODO: ボタンテンプレートの出しわけ
     title = event.get('title', '今日もお仕事お疲れ様！')
     text = event.get('text', '体調はどうかな？')
     reply_token = event.get('reply_token')
+    if reply_token:
+        statuses = STATUS_DICT_ON_DEMAND
+    else:
+        statuses = STATUS_DICT_DAILY
+
     postback_actions = []
-    for status, item in STATUS_DICT.items():
+    for status, item in statuses.items():
         postback_actions.append(PostbackAction(data=item['score'], label=item['label'], text='> ' + item['label']))
     buttuns_template = ButtonsTemplate(text=text, title=title, actions=postback_actions)
     try:
