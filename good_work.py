@@ -1,4 +1,3 @@
-from curses.ascii import alt
 import json
 import os
 import uuid
@@ -77,14 +76,14 @@ def handler(event, context):
     return response
 
 # LINEメッセージを送信する
-def push_postback_message(id: str, alt_text: str, buttuns_template: list[ButtonsTemplate]) -> bool:
+def push_postback_message(id: str, alt_text: str, buttuns_template: ButtonsTemplate) -> bool:
     # 16進表記のUUID
     retry_key = str(uuid.uuid1())
     attempt_count = 1
     messages = TemplateSendMessage(alt_text=alt_text, template=buttuns_template)
     while attempt_count <= MAX_ATTEMPTS:
         try:
-            line_bot_api.push_message(to=os.environ['MY_LINE_USER_ID'], messages=messages, retry_key=retry_key)
+            line_bot_api.push_message(to=id, messages=messages, retry_key=retry_key)
             return True
         except LineBotApiError as e:
             attempt_count = attempt_count + 1
