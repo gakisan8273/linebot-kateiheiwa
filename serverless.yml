@@ -14,9 +14,14 @@ provider:
       statements:
         - Effect: 'Allow'
           Action:
-            - 'dynamodb:*'
+            - dynamodb:*
           Resource:
             - arn:aws:dynamodb:${env:AWS_REGION}:${env:AWS_ACCOUNT_ID}:table/*
+        - Effect: 'Allow'
+          Action:
+            - lambda:InvokeFunction
+          Resource:
+            - "*"
 
 functions:
   # UTCで8時→JPで17時 平日の仕事終わりに定期的にメッセージを送る

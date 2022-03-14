@@ -37,6 +37,20 @@ def handler(event, context):
         # それ以外はポストバックイベントのみ処理する
         if isinstance(line_event, MessageEvent):
             group_id: str = getattr(line_event.source, 'group_id', '')
+            input_event = {
+                'reply_token': line_event.reply_token,
+                'title': 'お疲れ！',
+                'text': '体調はどうかな？',
+            }
+            Payload = json.dumps(input_event)
+            function_name = 'linebot-kateiheiwa-dev-good_work'
+            # TODO: 特定の発言の時のみ実行 postbackに付随するメッセージで発火されないように
+            boto3.client('lambda').invoke(
+                # TODO: ARNを環境変数から取得
+                FunctionName=function_name,
+                InvocationType='RequestResponse',
+                Payload=Payload
+            )
             try:
                 register_group_talk(group_id)
             except Exception as e:

@@ -48,16 +48,17 @@ STATUS_DICT = {
 MAX_ATTEMPTS = 3
 
 def handler(event, context):
+    # TODO: ボタンテンプレートの出しわけ
+    title = event.get('title', '今日もお仕事お疲れ様！')
+    text = event.get('text', '体調はどうかな？')
+    reply_token = event.get('reply_token')
     postback_actions = []
     for status, item in STATUS_DICT.items():
         postback_actions.append(PostbackAction(data=item['score'], label=item['label'], text='> ' + item['label']))
-
-    title = '今日もお仕事お疲れ様！'
-    text = '体調はどうかな？'
     buttuns_template = ButtonsTemplate(text=text, title=title, actions=postback_actions)
     try:
         group_talk_id = get_group_talk_id()
-        push_postback_message(group_talk_id, title, buttuns_template)
+        send_postback_message(group_talk_id, title, buttuns_template, reply_token)
     except Exception as e:
         print('error', e)
         # TODO: レスポンスを変更する
@@ -76,14 +77,17 @@ def handler(event, context):
     return response
 
 # LINEメッセージを送信する
-def push_postback_message(id: str, alt_text: str, buttuns_template: ButtonsTemplate) -> bool:
+def send_postback_message(id: str, alt_text: str, buttuns_template: ButtonsTemplate, reply_token: str) -> bool:
     # 16進表記のUUID
     retry_key = str(uuid.uuid1())
     attempt_count = 1
     messages = TemplateSendMessage(alt_text=alt_text, template=buttuns_template)
     while attempt_count <= MAX_ATTEMPTS:
         try:
-            line_bot_api.push_message(to=id, messages=messages, retry_key=retry_key)
+            if reply_token:
+                line_bot_api.reply_message(reply_token=reply_token, messages=messages)
+            else:
+                line_bot_api.push_message(to=id, messages=messages, retry_key=retry_key)
             return True
         except LineBotApiError as e:
             attempt_count = attempt_count + 1
