@@ -7,8 +7,8 @@ reply_messages = json.load(open('reply.json', 'r'))
 scores = json.load(open('score.json', 'r'))
 
 dynamo_db = boto3.resource('dynamodb')
-scores = dynamo_db.Table('tired-scores')
-group_talk = dynamo_db.Table('group-talk')
+scores_table = dynamo_db.Table('tired-scores')
+group_talk_table = dynamo_db.Table('group-talk')
 
 from logging import getLogger
 logger = getLogger(__name__)
@@ -112,7 +112,7 @@ def invoke_check_condition(message_event: MessageEvent) -> None:
 
 # DynamoDBからスコアを取得
 def get_score(id: str) -> int:
-    response = scores.get_item(Key={'id': id})
+    response = scores_table.get_item(Key={'id': id})
     if not 'Item' in response:
         return 0
 
@@ -122,7 +122,7 @@ def get_score(id: str) -> int:
 def register_group_talk(id: str) -> None:
     if not id:
         return
-    group_talk.put_item(
+    group_talk_table.put_item(
         Item = {
             "id": id,
         }
@@ -130,7 +130,7 @@ def register_group_talk(id: str) -> None:
 
 # DynamoDBのスコアを更新
 def update_score(id: str, score: int) -> None:
-    scores.put_item(
+    scores_table.put_item(
         Item = {
             "id": id,
             "score": score,
