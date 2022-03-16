@@ -173,7 +173,7 @@ def genarate_send_otukare_message_(score: int) -> str:
     messages = reply_messages[condition]
     length = len(messages)
     if length > 1:
-        element = random.randrange(length - 1)
+        element = random.randrange(length)
     else:
         element = 0
     return reply_messages[condition][element]
@@ -183,7 +183,7 @@ def genarate_send_kaihuku_message() -> str:
     messages = reply_messages['kaihuku']
     length = len(messages)
     if length > 1:
-        element = random.randrange(length - 1)
+        element = random.randrange(length)
     else:
         element = 0
     return reply_messages['kaihuku'][element]
