@@ -69,8 +69,11 @@ def handler(event, context):
             return
 
         # スコアから応答メッセージを生成して送信
-        # TODO: 回復時には別のメッセージを出す
-        send_message: str = genarate_send_message(score)
+        # 送信されたスコアが0以下なら休んだとみなし、メッセージを変える
+        if score_add > 0:
+            send_message: str = genarate_send_otukare_message_(score)
+        else:
+            send_message: str = genarate_send_kaihuku_message()
         try:
             line_bot_api.reply_message(line_event.reply_token, TextSendMessage(send_message))
         except Exception as e:
@@ -147,7 +150,7 @@ def calculate_score(now: int, add: int) -> int:
         return now + add
 
 # スコアに応じた応答メッセージを生成する
-def genarate_send_message(score: int) -> str:
+def genarate_send_otukare_message_(score: int) -> str:
     # 〜120→元気
     if score <= scores['genki']:
         condition = 'genki'
@@ -174,6 +177,16 @@ def genarate_send_message(score: int) -> str:
     else:
         element = 0
     return reply_messages[condition][element]
+
+# 回復したときのメッセージを生成する
+def genarate_send_kaihuku_message() -> str:
+    messages = reply_messages['kaihuku']
+    length = len(messages)
+    if length > 1:
+        element = random.randrange(length - 1)
+    else:
+        element = 0
+    return reply_messages['kaihuku'][element]
 
 # LINEメッセージを応答する
 def reply_message(reply_token: str, text: str):
