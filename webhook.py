@@ -137,12 +137,10 @@ def update_score(id: str, score: int) -> None:
 
 # 更新するスコアを計算する
 def calculate_score(now: int, add: int) -> int:
-    # 送信スコアが-1なら完全回復する
     if add == -1:
         return 0
-    # 送信スコアが0なら10まで回復
     elif add == 0:
-        return 10
+        return 120
     else:
         return now + add
 
