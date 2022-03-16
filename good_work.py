@@ -3,6 +3,8 @@ import os
 import uuid
 import boto3
 
+scores = json.load(open('score.json', 'r'))
+
 dynamo_db = boto3.resource('dynamodb')
 group_talk = dynamo_db.Table('group-talk')
 
@@ -27,29 +29,29 @@ webhook_handler = WebhookHandler(os.environ['LINE_CHANNEL_SECRET'])
 # 601〜    強く休め
 STATUS_DICT_DAILY = {
     'genki': {
-        'score': 120,
+        'score': scores['muri'] / 5,
         'label': '元気！',
     },
-    'a_little_sindoi': {
-        'score': 200,
+    'nantoka': {
+        'score': scores['muri'] / 3,
         'label': 'なんとか',
     },
     'sindoi': {
-        'score': 300,
+        'score': scores['muri'] / 2,
         'label': 'しんどい',
     },
     'muri': {
-        'score': 601,
+        'score': scores['muri'] + 1,
         'label': 'もう無理',
     },
 }
 STATUS_DICT_ON_DEMAND = {
     'sindoi': {
-        'score': 300,
+        'score': scores['muri'] / 2,
         'label': 'しんどい',
     },
     'muri': {
-        'score': 601,
+        'score': scores['muri'] + 1,
         'label': 'もう無理',
     },
     'sukosi_kaihuku': {

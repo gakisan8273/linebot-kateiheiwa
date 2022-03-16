@@ -3,6 +3,9 @@ import os
 import boto3
 import random
 
+reply_messages = json.load(open('reply.json', 'r'))
+scores = json.load(open('score.json', 'r'))
+
 dynamo_db = boto3.resource('dynamodb')
 scores = dynamo_db.Table('tired-scores')
 group_talk = dynamo_db.Table('group-talk')
@@ -100,7 +103,6 @@ def invoke_check_condition(message_event: MessageEvent) -> None:
         'text': '体調はどうかな？',
     }
     function_name = 'linebot-kateiheiwa-dev-good_work'
-    # TODO: 特定の発言の時のみ実行 postbackに付随するメッセージで発火されないように
     boto3.client('lambda').invoke(
         # TODO: ARNを環境変数から取得
         FunctionName=function_name,
@@ -140,31 +142,28 @@ def calculate_score(now: int, add: int) -> int:
     if add == -1:
         return 0
     elif add == 0:
-        return 120
+        return scores['genki']
     else:
         return now + add
 
 # スコアに応じた応答メッセージを生成する
 def genarate_send_message(score: int) -> str:
-    json_open = open('reply.json', 'r')
-    reply_messages = json.load(json_open)
-
     # 〜120→元気
-    if score <= 120:
+    if score <= scores['genki']:
         condition = 'genki'
     # 121〜240 なんとか頑張ってる
-    elif score <= 240:
+    elif score <= scores['nantoka']:
         condition = 'nantoka'
-    # 241〜360 そろそろきつい
-    elif score <= 360:
+    # 241〜360 しんどい
+    elif score <= scores['sindoi']:
         condition = 'sindoi'
-    # 361〜480 ストレス溜まっている
-    elif score <= 480:
+    # 361〜480 きつい
+    elif score <= scores['kitsui']:
         condition = 'kitsui'
-    # 481〜600 休んだほうがいい
-    elif score <= 600:
+    # 481〜600 休め
+    elif score <= scores['yasume']:
         condition = 'yasume'
-    # 601〜    休め
+    # 601〜    限界
     else:
         condition = 'limit'
 
