@@ -36,23 +36,9 @@ def handler(event, context):
         # グループトークからの発言があれば登録する
         # それ以外はポストバックイベントのみ処理する
         if isinstance(line_event, MessageEvent):
-            group_id: str = getattr(line_event.source, 'group_id', '')
-            input_event = {
-                'reply_token': line_event.reply_token,
-                'title': 'お疲れ！',
-                'text': '体調はどうかな？',
-            }
-            Payload = json.dumps(input_event)
-            function_name = 'linebot-kateiheiwa-dev-good_work'
-            # TODO: 特定の発言の時のみ実行 postbackに付随するメッセージで発火されないように
-            boto3.client('lambda').invoke(
-                # TODO: ARNを環境変数から取得
-                FunctionName=function_name,
-                InvocationType='RequestResponse',
-                Payload=Payload
-            )
             try:
-                register_group_talk(group_id)
+                invoke_check_condition(line_event)
+                register_group_talk(getattr(line_event.source, 'group_id', ''))
             except Exception as e:
                 print('error', e)
                 line_bot_api.reply_message(line_event.reply_token, TextSendMessage('ごめんなさい、エラーが発生したのでもう一回発言してね'))
@@ -80,6 +66,7 @@ def handler(event, context):
             return
 
         # スコアから応答メッセージを生成して送信
+        # TODO: 回復時には別のメッセージを出す
         send_message: str = genarate_send_message(score)
         try:
             line_bot_api.reply_message(line_event.reply_token, TextSendMessage(send_message))
@@ -100,6 +87,26 @@ def handler(event, context):
     }
 
     return response
+
+def invoke_check_condition(message_event: MessageEvent) -> None:
+    # > が含まれないテキストならポストバックではなくユーザの発話とみなす
+    text = getattr(message_event.message, 'text', '')
+    if not text or '>' in text:
+        return
+
+    payload = {
+        'reply_token': message_event.reply_token,
+        'title': 'お疲れ！',
+        'text': '体調はどうかな？',
+    }
+    function_name = 'linebot-kateiheiwa-dev-good_work'
+    # TODO: 特定の発言の時のみ実行 postbackに付随するメッセージで発火されないように
+    boto3.client('lambda').invoke(
+        # TODO: ARNを環境変数から取得
+        FunctionName=function_name,
+        InvocationType='RequestResponse',
+        Payload=json.dumps(payload)
+    )
 
 # DynamoDBからスコアを取得
 def get_score(id: str) -> int:
