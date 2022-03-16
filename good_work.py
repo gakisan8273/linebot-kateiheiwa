@@ -29,29 +29,29 @@ webhook_handler = WebhookHandler(os.environ['LINE_CHANNEL_SECRET'])
 # 601〜    強く休め
 STATUS_DICT_DAILY = {
     'genki': {
-        'score': scores['muri'] / 5,
+        'score': int(scores['yasume'] / 5),
         'label': '元気！',
     },
     'nantoka': {
-        'score': scores['muri'] / 3,
+        'score': int(scores['yasume'] / 3),
         'label': 'なんとか',
     },
     'sindoi': {
-        'score': scores['muri'] / 2,
+        'score': int(scores['yasume'] / 2),
         'label': 'しんどい',
     },
     'muri': {
-        'score': scores['muri'] + 1,
+        'score': int(scores['yasume'] + 1),
         'label': 'もう無理',
     },
 }
 STATUS_DICT_ON_DEMAND = {
     'sindoi': {
-        'score': scores['muri'] / 2,
+        'score': int(scores['yasume'] / 2),
         'label': 'しんどい',
     },
     'muri': {
-        'score': scores['muri'] + 1,
+        'score': int(scores['yasume'] + 1),
         'label': 'もう無理',
     },
     'sukosi_kaihuku': {
