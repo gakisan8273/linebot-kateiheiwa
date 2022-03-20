@@ -45,24 +45,6 @@ STATUS_DICT_DAILY = {
         'label': 'もう無理',
     },
 }
-STATUS_DICT_ON_DEMAND = {
-    'sindoi': {
-        'score': int(scores['yasume'] / 2),
-        'label': 'しんどい',
-    },
-    'muri': {
-        'score': int(scores['yasume'] + 1),
-        'label': 'もう無理',
-    },
-    'sukosi_kaihuku': {
-        'score': 0,
-        'label': '少し回復',
-    },
-    'kannzen_kaihuku': {
-        'score': -1,
-        'label': '完全回復',
-    },
-}
 
 # LINE API最大試行数
 MAX_ATTEMPTS = 3
@@ -72,7 +54,7 @@ def handler(event, context):
     text = event.get('text', '体調はどうかな？')
     reply_token = event.get('reply_token')
     if reply_token:
-        statuses = STATUS_DICT_ON_DEMAND
+        statuses = event.get('status_dict')
     else:
         statuses = STATUS_DICT_DAILY
 

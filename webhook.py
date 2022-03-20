@@ -24,6 +24,30 @@ parser = WebhookParser(os.environ['LINE_CHANNEL_SECRET'])
 # LINE API最大試行数
 MAX_ATTEMPTS = 3
 
+# 疲れた時のオンデマンドメニュー
+STATUS_DICT_ON_DEMAND_TIRED = {
+    'sindoi': {
+        'score': int(scores['yasume'] / 2),
+        'label': 'しんどい',
+    },
+    'muri': {
+        'score': int(scores['yasume'] + 1),
+        'label': 'もう無理',
+    }
+}
+
+# 休んだ時のオンデマンドメニュー
+STATUS_DICT_ON_DEMAND_REST = {
+    'sukosi_kaihuku': {
+        'score': 0,
+        'label': '少し回復',
+    },
+    'kannzen_kaihuku': {
+        'score': -1,
+        'label': '完全回復',
+    }
+}
+
 def handler(event, context):
     # LINEメッセージ認証処理
     signature: str = event['headers']['x-line-signature']
@@ -95,16 +119,27 @@ def handler(event, context):
     return response
 
 def invoke_check_condition(message_event: MessageEvent) -> None:
-    # > が含まれないテキストならポストバックではなくユーザの発話とみなす
     text = getattr(message_event.message, 'text', '')
-    if not text or '>' in text:
+    if not text or '> ' in text:
         return
 
-    payload = {
-        'reply_token': message_event.reply_token,
-        'title': 'お疲れ！',
-        'text': '体調はどうかな？',
-    }
+    if '疲れた' in text:
+        payload = {
+            'reply_token': message_event.reply_token,
+            'title': 'お疲れ様！',
+            'text': 'しんどい時は休む',
+            'status_dict': STATUS_DICT_ON_DEMAND_TIRED
+        }
+    elif '回復' in text:
+        payload = {
+            'reply_token': message_event.reply_token,
+            'title': 'ちょっとは休めたかな？',
+            'text': '体調はどうかな？',
+            'status_dict': STATUS_DICT_ON_DEMAND_REST
+        }
+    else:
+        return
+
     function_name = 'linebot-kateiheiwa-dev-good_work'
     boto3.client('lambda').invoke(
         # TODO: ARNを環境変数から取得
