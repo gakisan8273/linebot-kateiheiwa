@@ -10,9 +10,6 @@ dynamo_db = boto3.resource('dynamodb')
 scores_table = dynamo_db.Table('tired-scores')
 group_talk_table = dynamo_db.Table('group-talk')
 
-from logging import getLogger
-logger = getLogger(__name__)
-
 from linebot import (LineBotApi, WebhookHandler, WebhookParser)
 from linebot.models import (TextSendMessage, PostbackEvent, MessageEvent)
 from linebot.exceptions import (LineBotApiError, InvalidSignatureError)
@@ -224,12 +221,13 @@ def genarate_send_kaihuku_message() -> str:
     return reply_messages['kaihuku'][element]
 
 # LINEメッセージを応答する
-def reply_message(reply_token: str, text: str):
+def reply_message(reply_token: str, text: str) -> None:
     attempt_count = 1
     messages = TextSendMessage(text)
     while attempt_count <= MAX_ATTEMPTS:
         try:
             line_bot_api.reply_message(reply_token, messages)
+            return
         except LineBotApiError as e:
             attempt_count = attempt_count + 1
 
