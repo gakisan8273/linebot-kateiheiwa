@@ -21,12 +21,6 @@ webhook_handler = WebhookHandler(os.environ['LINE_CHANNEL_SECRET'])
 # なんとか → 3日で上限になるように 600/3=200
 # しんどい → 2日で上限になるように 600/2=300
 # もう無理 → 一発で上限を超えるように 600<601
-# 〜120 元気
-# 121〜240 なんとか頑張ってる
-# 241〜360 そろそろきつい
-# 361〜480 やばい
-# 481〜600 休め
-# 601〜    強く休め
 STATUS_DICT_DAILY = {
     'genki': {
         'score': int(scores['yasume'] / 5),
