@@ -5,8 +5,8 @@ frameworkVersion: '3'
 provider:
   name: aws
   runtime: python3.8
-  region: ap-northeast-1
-  stage: dev
+  region: ${env:AWS_REGION}
+  stage: ${opt:stage, self:custom.defaultStage}
   layers:
     - { Ref: PythonRequirementsLambdaLayer }
   iam:
@@ -54,6 +54,7 @@ plugins:
   - serverless-python-requirements
 
 custom:
+  defaultStage: dev
   pythonRequirements:
     dockerizePip: non-linux
     slim: true # __pycache__とかいらないものを消してくれる。

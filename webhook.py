@@ -11,7 +11,7 @@ scores_table = dynamo_db.Table('tired-scores')
 group_talk_table = dynamo_db.Table('group-talk')
 
 from linebot import (LineBotApi, WebhookHandler, WebhookParser)
-from linebot.models import (TextSendMessage, PostbackEvent, MessageEvent)
+from linebot.models import (TextSendMessage, PostbackEvent, MessageEvent, MessageAction, ButtonsTemplate, TemplateSendMessage)
 from linebot.exceptions import (LineBotApiError, InvalidSignatureError)
 
 line_bot_api = LineBotApi(os.environ['LINE_ACCESS_TOKEN'])
@@ -89,14 +89,20 @@ def handler(event, context):
             line_bot_api.reply_message(line_event.reply_token, TextSendMessage('ごめんなさい、エラーが発生したのでもう一回発言してね'))
             return
 
-        # スコアから応答メッセージを生成して送信
-        # 送信されたスコアが0以下なら休んだとみなし、メッセージを変える
-        if score_add > 0:
-            send_message: str = genarate_send_otukare_message_(score)
-        else:
-            send_message: str = genarate_send_kaihuku_message()
         try:
-            line_bot_api.reply_message(line_event.reply_token, TextSendMessage(send_message))
+            # スコアから応答メッセージを生成して送信
+            # 送信されたスコアが0以下なら休んだとみなし、メッセージを変える
+            if score_add > 0:
+                title: str = genarate_send_otukare_message_(score)
+                message_actions = [
+                    MessageAction(label='休む', text='> 休む'),
+                    MessageAction(label='また別の日にする', text='> また別の日にする'),
+                ]
+                buttons_template = ButtonsTemplate(text='休む？', title=title, actions=message_actions)
+                line_bot_api.reply_message(line_event.reply_token, TemplateSendMessage(alt_text='休む？', template=buttons_template))
+            else:
+                send_message: str = genarate_send_kaihuku_message()
+                line_bot_api.reply_message(line_event.reply_token, TextSendMessage(send_message))
         except Exception as e:
             print('error', e)
             # 応答失敗したら諦める
