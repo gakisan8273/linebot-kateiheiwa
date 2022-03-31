@@ -143,7 +143,7 @@ def invoke_check_condition(message_event: MessageEvent) -> None:
     else:
         return
 
-    function_name = 'linebot-kateiheiwa-dev-good_work'
+    function_name = 'linebot-kateiheiwa-' + os.environ['ENV'] + '-good_work'
     boto3.client('lambda').invoke(
         # TODO: ARNを環境変数から取得
         FunctionName=function_name,
