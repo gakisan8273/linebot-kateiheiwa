@@ -95,7 +95,8 @@ def handler(event, context):
             if score_add > 0:
                 title: str = genarate_send_otukare_message_(score)
                 message_actions = [
-                    MessageAction(label='休む', text='> 休む'),
+                    MessageAction(label='子供が寝てから帰る', text='> 子供が寝てから帰る'),
+                    MessageAction(label='ご飯を食べてくる', text='> ご飯を食べてくる'),
                     MessageAction(label='また別の日にする', text='> また別の日にする'),
                 ]
                 buttons_template = ButtonsTemplate(text='休む？', title=title, actions=message_actions)
