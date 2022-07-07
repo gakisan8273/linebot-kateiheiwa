@@ -15,6 +15,7 @@ provider:
         - Effect: 'Allow'
           Action:
             - dynamodb:*
+            - states:*
           Resource:
             - arn:aws:dynamodb:${env:AWS_REGION}:${env:AWS_ACCOUNT_ID}:table/*
         - Effect: 'Allow'
@@ -32,6 +33,9 @@ functions:
     environment:
       LINE_ACCESS_TOKEN: ${env:LINE_ACCESS_TOKEN, ""}
       LINE_CHANNEL_SECRET: ${env:LINE_CHANNEL_SECRET, ""}
+  # どれだけ回復したかを聞くポストバックを投げる
+  heal:
+    handler: heal.handler
   # UTCで15時→JPで24時 日曜24時にスコアを0にリセットする
   reset:
     handler: reset.handler
@@ -51,8 +55,27 @@ functions:
           path: /
           method: post
 
+# 休む（ご飯を食べてくるなど）を受け取ったら、一定時間後に、どれだけ回復したかを聞くポストバックを投げる
+stepFunctions:
+  stateMachines:
+    waitMachine:
+      definition:
+        StartAt: wait
+        States:
+          wait:
+            Type: Wait
+            # 90min待機 60 * 90 = 1500
+            Seconds: 1500
+            Next: heal
+          heal:
+            Type: Task
+            Resource:
+              Fn::GetAtt: [heal, Arn]
+            End: true
+
 plugins:
   - serverless-python-requirements
+  - serverless-step-functions
 
 custom:
   defaultStage: dev
