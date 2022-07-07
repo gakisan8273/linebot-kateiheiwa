@@ -28,7 +28,7 @@ functions:
   good_work:
     handler: good_work.handler
     events:
-      - schedule: cron(0 8 ? * MON-FRI *)
+      - schedule: cron(40 8 ? * MON-FRI *)
     environment:
       LINE_ACCESS_TOKEN: ${env:LINE_ACCESS_TOKEN, ""}
       LINE_CHANNEL_SECRET: ${env:LINE_CHANNEL_SECRET, ""}
