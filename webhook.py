@@ -1,5 +1,6 @@
 import json
 import os
+from aiohttp import content_disposition_filename
 import boto3
 import random
 
@@ -50,6 +51,7 @@ def handler(event, context):
                 # 特定の発話ならstep functionsを開始して一定時間後に回復メッセージを送信する
                 start_stepfunctions(line_event)
                 register_group_talk(getattr(line_event.source, 'group_id', ''))
+                continue
             except Exception as e:
                 print('error', e)
                 line_bot_api.reply_message(line_event.reply_token, TextSendMessage('ごめんなさい、エラーが発生したのでもう一回発言してね'))
@@ -116,8 +118,10 @@ def start_stepfunctions(message_event: MessageEvent) -> None:
 
     if REST_JSON['BACK_AFTER_SLEEP'] in text:
         step_functions.start_execution(stateMachineArn=os.environ['HEAL_ARN'])
+        line_bot_api.reply_message(message_event.reply_token, TextSendMessage('ゆっくり休んできて！'))
     elif REST_JSON['EAT_DINNER'] in text:
         step_functions.start_execution(stateMachineArn=os.environ['HEAL_ARN'])
+        line_bot_api.reply_message(message_event.reply_token, TextSendMessage('そーっと帰ってきてね！'))
     else:
         return
 
