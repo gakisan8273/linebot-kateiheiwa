@@ -15,11 +15,11 @@ provider:
         - Effect: 'Allow'
           Action:
             - dynamodb:*
-            - states:*
           Resource:
             - arn:aws:dynamodb:${env:AWS_REGION}:${env:AWS_ACCOUNT_ID}:table/*
         - Effect: 'Allow'
           Action:
+            - states:*
             - lambda:InvokeFunction
           Resource:
             - "*"
@@ -50,6 +50,7 @@ functions:
       LINE_ACCESS_TOKEN: ${env:LINE_ACCESS_TOKEN, ""}
       LINE_CHANNEL_SECRET: ${env:LINE_CHANNEL_SECRET, ""}
       ENV: ${self:provider.stage}
+      HEAL_ARN: ${self:resources.Outputs.HealMachine.Value}
     events:
       - httpApi:
           path: /
@@ -59,6 +60,7 @@ functions:
 stepFunctions:
   stateMachines:
     waitMachine:
+      name: healMachine
       definition:
         StartAt: wait
         States:
@@ -92,6 +94,10 @@ custom:
         - python3.8
 
 resources:
+  Outputs:
+    HealMachine:
+      Value:
+        Ref: HealMachine
   Resources:
     TiredScores:
       Type: 'AWS::DynamoDB::Table'

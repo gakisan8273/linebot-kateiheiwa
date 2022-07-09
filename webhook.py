@@ -7,6 +7,7 @@ reply_messages = json.load(open('reply.json', 'r'))
 scores = json.load(open('score.json', 'r'))
 
 dynamo_db = boto3.resource('dynamodb')
+step_functions = boto3.client('stepfunctions')
 scores_table = dynamo_db.Table('tired-scores')
 group_talk_table = dynamo_db.Table('group-talk')
 
@@ -33,18 +34,6 @@ STATUS_DICT_ON_DEMAND_TIRED = {
     }
 }
 
-# 休んだ時のオンデマンドメニュー
-STATUS_DICT_ON_DEMAND_REST = {
-    'sukosi_kaihuku': {
-        'score': 0,
-        'label': '少し回復',
-    },
-    'kannzen_kaihuku': {
-        'score': -1,
-        'label': '完全回復',
-    }
-}
-
 def handler(event, context):
     # LINEメッセージ認証処理
     signature: str = event['headers']['x-line-signature']
@@ -61,7 +50,7 @@ def handler(event, context):
         # それ以外はポストバックイベントのみ処理する
         if isinstance(line_event, MessageEvent):
             try:
-                invoke_check_condition(line_event)
+                invoke_reply_postback(line_event)
                 register_group_talk(getattr(line_event.source, 'group_id', ''))
             except Exception as e:
                 print('error', e)
@@ -94,6 +83,7 @@ def handler(event, context):
             # 送信されたスコアが0以下なら休んだとみなし、メッセージを変える
             if score_add > 0:
                 title: str = genarate_send_otukare_message_(score)
+                # TODO: 定数を使う
                 message_actions = [
                     MessageAction(label='子供が寝てから帰る', text='> 子供が寝てから帰る'),
                     MessageAction(label='ご飯を食べてくる', text='> ご飯を食べてくる'),
@@ -122,35 +112,18 @@ def handler(event, context):
 
     return response
 
-def invoke_check_condition(message_event: MessageEvent) -> None:
+def invoke_reply_postback(message_event: MessageEvent) -> None:
     text = getattr(message_event.message, 'text', '')
-    if not text or '> ' in text:
+    if not '> ' in text:
         return
 
-    if '疲れた' in text:
-        payload = {
-            'reply_token': message_event.reply_token,
-            'title': 'お疲れ様！',
-            'text': 'しんどい時は休む',
-            'status_dict': STATUS_DICT_ON_DEMAND_TIRED
-        }
-    elif '回復' in text:
-        payload = {
-            'reply_token': message_event.reply_token,
-            'title': 'ちょっとは休めたかな？',
-            'text': '体調はどうかな？',
-            'status_dict': STATUS_DICT_ON_DEMAND_REST
-        }
+    if '子供が寝てから帰る' in text:
+        step_functions.start_execution(stateMachineArn=os.environ['HEAL_ARN'])
+    elif 'ご飯を食べてくる' in text:
+        step_functions.start_execution(stateMachineArn=os.environ['HEAL_ARN'])
     else:
         return
 
-    function_name = 'linebot-kateiheiwa-' + os.environ['ENV'] + '-good_work'
-    boto3.client('lambda').invoke(
-        # TODO: ARNを環境変数から取得
-        FunctionName=function_name,
-        InvocationType='RequestResponse',
-        Payload=json.dumps(payload)
-    )
 
 # DynamoDBからスコアを取得
 def get_score(id: str) -> int:
