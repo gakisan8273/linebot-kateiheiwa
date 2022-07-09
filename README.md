@@ -35,7 +35,7 @@ Deploying linebot-kateiheiwa to stage dev (<your-region>)
 
 endpoint: POST - https://xxxxxxxxxx.execute-api.<your-region>.amazonaws.com/ ← 次のステップで使用します
 functions:
-  good_work: linebot-kateiheiwa-dev-good_work (7.1 MB)
+  send_message: linebot-kateiheiwa-dev-send_message (7.1 MB)
   reset: linebot-kateiheiwa-dev-reset (7.1 MB)
   webhook: linebot-kateiheiwa-dev-webhook (7.1 MB)
 layers:

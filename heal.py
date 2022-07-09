@@ -20,10 +20,8 @@ def handler(event, context):
         'text': '体調はどうかな？',
         'status_dict': STATUS_DICT_ON_DEMAND_REST
     }
-    function_name = 'linebot-kateiheiwa-' + os.environ['ENV'] + '-good_work'
     boto3.client('lambda').invoke(
-        # TODO: ARNを環境変数から取得
-        FunctionName=function_name,
+        FunctionName=os.environ['SEND_MESSAGE_FUNCTION'],
         InvocationType='RequestResponse',
         Payload=json.dumps(payload)
     )

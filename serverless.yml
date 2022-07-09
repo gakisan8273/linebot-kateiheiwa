@@ -26,8 +26,8 @@ provider:
 
 functions:
   # UTCで8時→JPで17時 平日の仕事終わりに定期的にメッセージを送る
-  good_work:
-    handler: good_work.handler
+  send_message:
+    handler: send_message.handler
     events:
       - schedule: cron(40 8 ? * MON-FRI *)
     environment:
@@ -37,7 +37,7 @@ functions:
   heal:
     handler: heal.handler
     environment:
-      ENV: ${self:provider.stage}
+      SEND_MESSAGE_FUNCTION: ${self:service}-${self:provider.stage}-send_message
   # UTCで15時→JPで24時 日曜24時にスコアを0にリセットする
   reset:
     handler: reset.handler
