@@ -47,7 +47,8 @@ def handler(event, context):
         # それ以外はポストバックイベントのみ処理する
         if isinstance(line_event, MessageEvent):
             try:
-                invoke_reply_postback(line_event)
+                # 特定の発話ならstep functionsを開始して一定時間後に回復メッセージを送信する
+                start_stepfunctions(line_event)
                 register_group_talk(getattr(line_event.source, 'group_id', ''))
             except Exception as e:
                 print('error', e)
@@ -79,7 +80,7 @@ def handler(event, context):
             # スコアから応答メッセージを生成して送信
             # 送信されたスコアが0以下なら休んだとみなし、メッセージを変える
             if score_add > 0:
-                title: str = genarate_send_otukare_message_(score)
+                title: str = genarate_send_otukare_message(score)
                 message_actions = [
                     MessageAction(label=REST_JSON['BACK_AFTER_SLEEP'], text='> ' + REST_JSON['BACK_AFTER_SLEEP']),
                     MessageAction(label=REST_JSON['EAT_DINNER'], text='> ' + REST_JSON['EAT_DINNER']),
@@ -108,7 +109,7 @@ def handler(event, context):
 
     return response
 
-def invoke_reply_postback(message_event: MessageEvent) -> None:
+def start_stepfunctions(message_event: MessageEvent) -> None:
     text = getattr(message_event.message, 'text', '')
     if not '> ' in text:
         return
@@ -158,7 +159,7 @@ def calculate_score(now: int, add: int) -> int:
         return now + add
 
 # スコアに応じた応答メッセージを生成する
-def genarate_send_otukare_message_(score: int) -> str:
+def genarate_send_otukare_message(score: int) -> str:
     # 〜120→元気
     if score <= scores['genki']:
         condition = 'genki'
