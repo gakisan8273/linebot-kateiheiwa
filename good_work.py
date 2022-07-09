@@ -47,7 +47,8 @@ def handler(event, context):
     title = event.get('title', '今日もお仕事お疲れ様！')
     text = event.get('text', '体調はどうかな？')
     reply_token = event.get('reply_token')
-    if reply_token:
+    status_dict = event.get('status_dict')
+    if status_dict:
         statuses = event.get('status_dict')
     else:
         statuses = STATUS_DICT_DAILY
