@@ -36,6 +36,8 @@ functions:
   # どれだけ回復したかを聞くポストバックを投げる
   heal:
     handler: heal.handler
+    environment:
+      ENV: ${self:provider.stage}
   # UTCで15時→JPで24時 日曜24時にスコアを0にリセットする
   reset:
     handler: reset.handler
