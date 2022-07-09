@@ -118,10 +118,10 @@ def start_stepfunctions(message_event: MessageEvent) -> None:
 
     if REST_JSON['BACK_AFTER_SLEEP'] in text:
         step_functions.start_execution(stateMachineArn=os.environ['HEAL_ARN'])
-        line_bot_api.reply_message(message_event.reply_token, TextSendMessage('ゆっくり休んできて！'))
+        line_bot_api.reply_message(message_event.reply_token, TextSendMessage('そーっと帰ってきてね！'))
     elif REST_JSON['EAT_DINNER'] in text:
         step_functions.start_execution(stateMachineArn=os.environ['HEAL_ARN'])
-        line_bot_api.reply_message(message_event.reply_token, TextSendMessage('そーっと帰ってきてね！'))
+        line_bot_api.reply_message(message_event.reply_token, TextSendMessage('ゆっくり休んできて！'))
     else:
         return
 
