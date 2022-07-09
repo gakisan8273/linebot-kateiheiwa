@@ -22,17 +22,14 @@ parser = WebhookParser(os.environ['LINE_CHANNEL_SECRET'])
 # LINE API最大試行数
 MAX_ATTEMPTS = 3
 
-# 疲れた時のオンデマンドメニュー
-STATUS_DICT_ON_DEMAND_TIRED = {
-    'sindoi': {
-        'score': int(scores['yasume'] / 2),
-        'label': 'しんどい',
-    },
-    'muri': {
-        'score': int(scores['yasume'] + 1),
-        'label': 'もう無理',
-    }
+# 何かしてから帰宅する時の文言
+REST_JSON = {
+    'BACK_AFTER_SLEEP': '子供が寝てから帰る',
+    'EAT_DINNER': 'ご飯を食べてくる',
 }
+
+# 普通に帰宅する時の文言
+BACK_HOME_SOON = 'また別の日にする'
 
 def handler(event, context):
     # LINEメッセージ認証処理
@@ -83,11 +80,10 @@ def handler(event, context):
             # 送信されたスコアが0以下なら休んだとみなし、メッセージを変える
             if score_add > 0:
                 title: str = genarate_send_otukare_message_(score)
-                # TODO: 定数を使う
                 message_actions = [
-                    MessageAction(label='子供が寝てから帰る', text='> 子供が寝てから帰る'),
-                    MessageAction(label='ご飯を食べてくる', text='> ご飯を食べてくる'),
-                    MessageAction(label='また別の日にする', text='> また別の日にする'),
+                    MessageAction(label=REST_JSON['BACK_AFTER_SLEEP'], text='> ' + REST_JSON['BACK_AFTER_SLEEP']),
+                    MessageAction(label=REST_JSON['EAT_DINNER'], text='> ' + REST_JSON['EAT_DINNER']),
+                    MessageAction(label=BACK_HOME_SOON, text='> ' + BACK_HOME_SOON),
                 ]
                 buttons_template = ButtonsTemplate(text='休む？', title=title, actions=message_actions)
                 line_bot_api.reply_message(line_event.reply_token, TemplateSendMessage(alt_text='休む？', template=buttons_template))
@@ -117,9 +113,9 @@ def invoke_reply_postback(message_event: MessageEvent) -> None:
     if not '> ' in text:
         return
 
-    if '子供が寝てから帰る' in text:
+    if REST_JSON['BACK_AFTER_SLEEP'] in text:
         step_functions.start_execution(stateMachineArn=os.environ['HEAL_ARN'])
-    elif 'ご飯を食べてくる' in text:
+    elif REST_JSON['EAT_DINNER'] in text:
         step_functions.start_execution(stateMachineArn=os.environ['HEAL_ARN'])
     else:
         return
