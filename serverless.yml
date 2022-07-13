@@ -68,8 +68,8 @@ stepFunctions:
         States:
           wait:
             Type: Wait
-            # 90min待機 60 * 90 = 1500
-            Seconds: 1500
+            # 90分 = 60秒 * 90
+            Seconds: 5400
             Next: heal
           heal:
             Type: Task
