@@ -29,7 +29,7 @@ functions:
   send_message:
     handler: send_message.handler
     events:
-      - schedule: cron(40 8 ? * MON-FRI *)
+      - schedule: ${env:SCHEDULE_CRON, "cron(40 8 ? * MON-FRI *)"}
     environment:
       LINE_ACCESS_TOKEN: ${env:LINE_ACCESS_TOKEN, ""}
       LINE_CHANNEL_SECRET: ${env:LINE_CHANNEL_SECRET, ""}
