@@ -82,7 +82,7 @@ plugins:
   - serverless-step-functions
 
 custom:
-  defaultStage: dev
+  defaultStage: prod
   pythonRequirements:
     dockerizePip: non-linux
     slim: true # __pycache__とかいらないものを消してくれる。
