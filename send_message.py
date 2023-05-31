@@ -61,7 +61,7 @@ def handler(event, context):
         group_talk_id = get_group_talk_id()
         send_postback_message(group_talk_id, title, buttuns_template, reply_token)
     except Exception as e:
-        print('error', e)
+        print(e)
         # TODO: レスポンスを変更する
         return
 

@@ -17,7 +17,7 @@ def handler(event, context):
         group_talk_id = get_group_talk_id()
         line_bot_api.push_message(group_talk_id, TextSendMessage('全員の体調をリセットしました'), notification_disabled=True)
     except Exception as e:
-        print('error', e)
+        print(e)
         return
 
     body = {

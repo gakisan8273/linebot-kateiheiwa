@@ -53,7 +53,7 @@ def handler(event, context):
                 register_group_talk(getattr(line_event.source, 'group_id', ''))
                 continue
             except Exception as e:
-                print('error', e)
+                print(e)
                 line_bot_api.reply_message(line_event.reply_token, TextSendMessage('ごめんなさい、エラーが発生したのでもう一回発言してね'))
                 return
         if not isinstance(line_event, PostbackEvent):
@@ -64,7 +64,7 @@ def handler(event, context):
         try:
             score_now: int = get_score(user_id)
         except Exception as e:
-            print('error', e)
+            print(e)
             line_bot_api.reply_message(line_event.reply_token, TextSendMessage('ごめんなさい、エラーが発生したのでもう一回発言してね'))
             return
         score_add: int = int(line_event.postback.data)
@@ -74,7 +74,7 @@ def handler(event, context):
         try:
             update_score(user_id, score)
         except Exception as e:
-            print('error', e)
+            print(e)
             line_bot_api.reply_message(line_event.reply_token, TextSendMessage('ごめんなさい、エラーが発生したのでもう一回発言してね'))
             return
 
@@ -94,7 +94,7 @@ def handler(event, context):
                 send_message: str = genarate_send_kaihuku_message()
                 line_bot_api.reply_message(line_event.reply_token, TextSendMessage(send_message))
         except Exception as e:
-            print('error', e)
+            print(e)
             # 応答失敗したら諦める
             # TODO: レスポンスを変更する
             return
